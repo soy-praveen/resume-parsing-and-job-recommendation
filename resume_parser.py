@@ -124,66 +124,9 @@ def extract_skills(text):
     return sorted(list(set(found_skills)))  # Remove duplicates and sort
 
 def extract_education(text):
-    """Extract education information from text"""
-    education = []
-    
-    # Define keywords for education section
-    education_keywords = ['education', 'university', 'college', 'institute', 'school', 'bachelor', 
-                         'master', 'phd', 'degree', 'diploma', 'certification']
-    
-    # Split the text into lines and sections
-    lines = text.split('\n')
-    
-    # Simple heuristic: Check for education keywords on each line
-    in_education_section = False
-    current_edu = {}
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        
-        # Check if this line starts an education section
-        if any(keyword.lower() in line.lower() for keyword in education_keywords):
-            in_education_section = True
-            
-            # If we were already in an education section, save the previous one
-            if current_edu and 'institution' in current_edu:
-                education.append(current_edu)
-                current_edu = {}
-            
-            # Extract institution name
-            institution = line
-            for keyword in education_keywords:
-                if keyword.lower() in line.lower() and len(line) > len(keyword) + 5:
-                    institution = line
-                    break
-            
-            current_edu = {'institution': institution, 'degree': ''}
-        
-        # If we're in an education section, look for degree info
-        elif in_education_section:
-            # Check for degree-related keywords
-            degree_keywords = ['bachelor', 'master', 'phd', 'bs', 'ms', 'ba', 'ma', 'degree']
-            
-            if any(keyword.lower() in line.lower() for keyword in degree_keywords):
-                current_edu['degree'] = line
-            
-            # Check for date ranges (simple heuristic)
-            if re.search(r'20\d\d\s*[-–—]\s*(20\d\d|present|current)', line.lower()):
-                current_edu['date'] = line
-                
-                # End of this education entry
-                if 'institution' in current_edu:
-                    education.append(current_edu)
-                    current_edu = {}
-                    in_education_section = False
-    
-    # Add the last education entry if it exists
-    if current_edu and 'institution' in current_edu:
-        education.append(current_edu)
-    
-    return education
+    """Education section is removed as requested, returns an empty list"""
+    # This function has been simplified to return an empty list as education section is no longer needed
+    return []
 
 def extract_experience(text):
     """Extract work experience from text"""

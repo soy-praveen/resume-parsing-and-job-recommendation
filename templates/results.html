@@ -182,44 +182,9 @@
     </div>
 </div>
 
-<!-- Education and Job Recommendations -->
+<!-- Job Recommendations section -->
 <div class="row mb-5">
-    <!-- Education section -->
-    <div class="col-md-5 mb-4 mb-md-0">
-        <div class="card bg-body-secondary border-0">
-            <div class="card-body">
-                <h2 class="card-title h4 mb-3">
-                    <i class="fas fa-graduation-cap me-2 text-info"></i>Education
-                </h2>
-                
-                {% if parsed_data.education %}
-                <div class="timeline">
-                    {% for edu in parsed_data.education %}
-                    <div class="timeline-item mb-4">
-                        <div class="d-flex mb-1">
-                            <div class="timeline-marker bg-info me-3 mt-1"></div>
-                            <div>
-                                <h4 class="h6 mb-0">{{ edu.institution }}</h4>
-                                {% if edu.degree %}
-                                <p class="mb-0">{{ edu.degree }}</p>
-                                {% endif %}
-                                {% if edu.date %}
-                                <p class="small text-secondary">{{ edu.date }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted">No education history was identified in your resume.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Job Recommendations section -->
-    <div class="col-md-7">
+    <div class="col-md-12">
         <div class="card bg-body-secondary border-0">
             <div class="card-body">
                 <h2 class="card-title h4 mb-3">
