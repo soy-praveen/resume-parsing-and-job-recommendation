@@ -74,6 +74,16 @@
                     <h4 class="h6 mb-1">Skills Identified</h4>
                     <span class="badge bg-info fs-6">{{ job_recommendations.insights.skill_count }}</span>
                 </div>
+
+                <!-- Enhanced Matching -->
+                <div class="mb-3">
+                    <h4 class="h6 mb-1">AI-Powered Matching</h4>
+                    {% if job_recommendations.insights.using_enhanced_matching %}
+                        <span class="badge bg-success fs-6">Enabled</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6">Basic Mode</span>
+                    {% endif %}
+                </div>
                 
                 <!-- Match Score Visualization -->
                 <div class="mt-4">
@@ -93,6 +103,18 @@
                              aria-valuenow="{{ avg_match }}" aria-valuemin="0" aria-valuemax="100">{{ avg_match }}%</div>
                     </div>
                 </div>
+                
+                <!-- Keywords -->
+                {% if job_recommendations.insights.extracted_keywords and job_recommendations.insights.extracted_keywords|length > 0 %}
+                <div class="mt-3">
+                    <h4 class="h6 mb-1">AI-Extracted Keywords</h4>
+                    <div class="d-flex flex-wrap">
+                        {% for keyword in job_recommendations.insights.extracted_keywords %}
+                            <span class="badge bg-secondary me-1 mb-1">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -224,6 +246,47 @@
                             <div class="accordion-body">
                                 <p><i class="fas fa-map-marker-alt text-info me-2"></i>{{ job.location }}</p>
                                 <p>{{ job.description }}</p>
+                                
+                                <!-- Score Breakdown -->
+                                <div class="row mt-3 mb-3">
+                                    <div class="col-md-12">
+                                        <h5 class="h6 mb-2"><i class="fas fa-chart-bar text-info me-2"></i>Match Score Breakdown</h5>
+                                        <div class="d-flex flex-wrap align-items-center">
+                                            <div class="me-4 mb-2">
+                                                <span class="badge bg-info p-2">{{ job.match_score }}%</span>
+                                                <small class="text-muted ms-1">Overall</small>
+                                            </div>
+                                            
+                                            {% if job.skill_match is defined %}
+                                            <div class="me-4 mb-2">
+                                                <span class="badge bg-light text-dark p-2">{{ job.skill_match }}%</span>
+                                                <small class="text-muted ms-1">Skill Match</small>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if job.semantic_score is defined and job.semantic_score > 0 %}
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark p-2">{{ job.semantic_score }}%</span>
+                                                <small class="text-muted ms-1">Semantic Match</small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- AI-Extracted Key Requirements -->
+                                {% if job.key_job_requirements and job.key_job_requirements|length > 0 %}
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <h5 class="h6 mb-2"><i class="fas fa-key text-info me-2"></i>AI-Identified Key Requirements</h5>
+                                        <div class="d-flex flex-wrap">
+                                            {% for keyword in job.key_job_requirements %}
+                                            <span class="badge bg-secondary me-2 mb-2">{{ keyword }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
                                 
                                 <div class="row mt-3">
                                     <div class="col-md-6">
