@@ -1,0 +1,20 @@
+This is a test resume
+Name: John Doe
+Email: john.doe@example.com
+Phone: (555) 123-4567
+
+Professional Summary
+Experienced software engineer with extensive background in Python, JavaScript and web development.
+
+Skills
+Python, JavaScript, HTML, CSS, Flask, React, SQL, Git, API Development
+
+Work Experience
+Software Engineer | Tech Innovations Inc. | 2018 - 2022
+- Developed web applications using Python and Flask
+- Implemented REST APIs for client-side applications
+- Optimized database queries and improved performance
+
+Education
+Bachelor of Science in Computer Science | University State University | 2014 - 2018
+
