@@ -85,7 +85,9 @@
                             {% for job in job_recommendations.jobs %}
                                 {% set scores = scores + [job.match_score] %}
                             {% endfor %}
-                            {% set avg_match = (scores|sum / scores|length)|round|int %}
+                            {% if scores|length > 0 %}
+                                {% set avg_match = (scores|sum / scores|length)|round|int %}
+                            {% endif %}
                         {% endif %}
                         <div class="progress-bar bg-info" role="progressbar" style="width: {{ avg_match }}%;" 
                              aria-valuenow="{{ avg_match }}" aria-valuemin="0" aria-valuemax="100">{{ avg_match }}%</div>
