@@ -6,6 +6,7 @@ import werkzeug.utils
 from werkzeug.utils import secure_filename
 from resume_parser import extract_text_from_resume, parse_resume
 from job_recommender import get_job_recommendations
+from chatgpt_service import generate_chatgpt_response, is_api_key_valid
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -117,6 +118,58 @@ def file_too_large(e):
 def internal_server_error(e):
     flash('An internal server error occurred. Please try again later.', 'danger')
     return redirect(url_for('index'))
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    """API endpoint for the career assistant chatbot"""
+    try:
+        data = request.json
+        
+        if not data or 'query' not in data:
+            return jsonify({'error': 'No query provided'}), 400
+        
+        # Check if API key is valid
+        if not is_api_key_valid():
+            return jsonify({
+                'response': "I'm sorry, but the ChatGPT service is not available at the moment. "
+                            "Please try again later or contact support for assistance."
+            })
+        
+        # Get the query from the request
+        query = data['query']
+        
+        # Get context from session if available
+        context = {}
+        if 'parsed_data' in session and 'job_recommendations' in session:
+            parsed_data = session['parsed_data']
+            job_recommendations = session['job_recommendations']
+            
+            # Add skills from resume
+            if 'skills' in parsed_data:
+                context['skills'] = parsed_data['skills']
+                
+            # Add target job information if available from request
+            if 'jobIndex' in data and data['jobIndex'] is not None:
+                try:
+                    job_index = int(data['jobIndex'])
+                    if 0 <= job_index < len(job_recommendations['jobs']):
+                        selected_job = job_recommendations['jobs'][job_index]
+                        context['job_title'] = selected_job['title']
+                        context['missing_skills'] = selected_job['missing_skills']
+                except (ValueError, IndexError) as e:
+                    logging.error(f"Error processing job index: {str(e)}")
+        
+        # Generate response using ChatGPT
+        response = generate_chatgpt_response(query, context)
+        
+        return jsonify({'response': response})
+    
+    except Exception as e:
+        logging.error(f"Error in chat API: {str(e)}")
+        return jsonify({
+            'error': 'An error occurred while processing your request.',
+            'details': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

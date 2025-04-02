@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeFile = document.getElementById('remove-file');
     const submitBtn = document.getElementById('submit-btn');
     const loadingSpinner = document.getElementById('loading-spinner');
+    
+    // Career Assistant chat elements
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    const jobSelect = document.getElementById('jobSelect');
 
     // Debug message to check if the script is loading
     console.log('ResuMatch JS loaded successfully');
@@ -189,5 +195,118 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('Browse button not found');
+    }
+    
+    // Set up the Skills to Develop job selector
+    if (jobSelect) {
+        jobSelect.addEventListener('change', function() {
+            console.log('Job selection changed:', this.value);
+            const jobIndex = parseInt(this.value);
+            
+            // Hide all job skills sections
+            document.querySelectorAll('.job-skills-section').forEach(function(section) {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected job skills section
+            const selectedSection = document.getElementById(`job-skills-${jobIndex}`);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        });
+    }
+    
+    // Career Assistant Chat functionality
+    if (chatInput && sendMessage && chatMessages) {
+        console.log('Chat elements found, setting up chat functionality');
+        
+        // Function to add a message to the chat UI
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `d-flex mb-3 ${isUser ? 'justify-content-end' : ''}`;
+            
+            // Create message HTML based on whether it's a user or assistant message
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="bg-info text-white p-3 rounded-3 shadow-sm mw-75">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-robot text-info fs-4"></i>
+                    </div>
+                    <div class="ms-3 bg-body-tertiary p-3 rounded-3 shadow-sm mw-75">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Function to send a message to the ChatGPT API
+        async function sendChatMessage(message) {
+            try {
+                const selectedJobIndex = jobSelect ? jobSelect.value : null;
+                
+                // Show loading state
+                sendMessage.disabled = true;
+                sendMessage.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                
+                // Make API request
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: message,
+                        jobIndex: selectedJobIndex
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                // Reset button state
+                sendMessage.disabled = false;
+                sendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                
+                if (data.error) {
+                    addMessage('Error: ' + data.error);
+                } else {
+                    addMessage(data.response);
+                }
+            } catch (error) {
+                console.error('Error sending chat message:', error);
+                sendMessage.disabled = false;
+                sendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                addMessage('Sorry, there was an error processing your request. Please try again.');
+            }
+        }
+        
+        // Send button click event
+        sendMessage.addEventListener('click', function() {
+            const message = chatInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                chatInput.value = '';
+                sendChatMessage(message);
+            }
+        });
+        
+        // Enter key press event
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const message = chatInput.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    chatInput.value = '';
+                    sendChatMessage(message);
+                }
+            }
+        });
     }
 });
