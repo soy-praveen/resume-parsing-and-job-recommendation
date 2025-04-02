@@ -7,3 +7,13 @@ python-dotenv
 uuid
 logging
 gunicorn
+Flask
+gunicorn
+PyPDF2
+python-docx
+numpy
+pandas
+werkzeug
+resume-parser
+job-recommender
+chatgpt-service
