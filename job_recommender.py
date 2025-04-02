@@ -7,14 +7,24 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
+# Define variables to track availability
+SPACY_AVAILABLE = False
+TF_IDF_AVAILABLE = False
+
+# Try to import spaCy
 try:
     import spacy
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
     SPACY_AVAILABLE = True
 except ImportError:
-    SPACY_AVAILABLE = False
-    logging.warning("spaCy or scikit-learn not available. Using basic matching.")
+    logging.warning("spaCy not available. Using basic NLP processing.")
+
+# Try to import scikit-learn
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    TF_IDF_AVAILABLE = True
+except ImportError:
+    logging.warning("scikit-learn not available. Using basic similarity matching.")
 
 # Download NLTK resources if not already available
 try:
@@ -194,7 +204,7 @@ def calculate_semantic_similarity(text1, text2):
         return 0
     
     # Use scikit-learn if available (better quality)
-    if SPACY_AVAILABLE:
+    if TF_IDF_AVAILABLE:
         try:
             # Create TF-IDF vectorizer
             vectorizer = TfidfVectorizer(stop_words='english')

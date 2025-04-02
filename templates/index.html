@@ -93,7 +93,7 @@
                                 <h3 class="fs-5">Drag & Drop your resume here</h3>
                                 <p>or</p>
                                 <label for="resume" class="btn btn-outline-info">Browse Files</label>
-                                <input type="file" id="resume" name="resume" class="d-none" accept=".pdf,.docx" required>
+                                <input type="file" id="resume" name="resume" class="d-none" accept=".pdf,.docx">
                                 <p class="mt-2 text-secondary small">Supported formats: PDF, DOCX (Max 16MB)</p>
                                 <div id="file-info" class="mt-3 d-none">
                                     <div class="d-flex align-items-center justify-content-center">
@@ -113,6 +113,22 @@
                             </button>
                         </div>
                     </form>
+                    
+                    <!-- Direct file upload alternative (fallback) -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h4 class="h6 text-center mb-4">If you're having trouble with the drag & drop uploader, use this simple upload form:</h4>
+                        <form action="{{ url_for('upload_resume') }}" method="post" enctype="multipart/form-data" id="simple-resume-form">
+                            <div class="mb-3">
+                                <label for="resume-simple" class="form-label">Select resume file (PDF or DOCX)</label>
+                                <input type="file" id="resume-simple" name="resume" class="form-control" accept=".pdf,.docx">
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-info">
+                                    Upload and Analyze
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
