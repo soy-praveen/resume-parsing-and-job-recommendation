@@ -412,9 +412,9 @@ document.addEventListener('DOMContentLoaded', function() {
         "greeting": ["Hello!", "Hi there!", "How can I help you today?"],
         "thanks": ["You're welcome!", "Happy to help!", "Anytime!"],
         "skill development": [
-            "To develop new skills, consider: 1) Online courses on platforms like Coursera, Udemy, or LinkedIn Learning, 2) Hands-on projects to apply what you've learned, 3) Joining professional communities or forums.",
-            "When developing technical skills, start with the fundamentals and work on real projects. Platforms like GitHub can help showcase your work.",
-            "Consider certifications relevant to your field. They can add credibility to your resume and validate your skills."
+            "To develop the skills shown in the missing skills list: 1) Start with online courses on platforms like Coursera, Udemy, or LinkedIn Learning, 2) Create hands-on projects that specifically use these technologies, 3) Join communities like DevOps subreddits, Discord channels, or Stack Overflow.",
+            "For the skills listed above: Begin by learning one skill deeply rather than several superficially. Create a portfolio project that demonstrates this skill and publish it on GitHub with clear documentation.",
+            "To develop the missing skills shown in the job requirements: 1) For each skill, find a hands-on tutorial or course, 2) Build a small project implementing each skill, 3) Document your learning journey, 4) Create a portfolio showcasing these skills."
         ],
         "resume tips": [
             "Make sure your resume highlights relevant skills and quantifies your achievements with numbers and metrics.",
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return "ci/cd";
         } else if (input.match(/\b(terraform|infrastructure as code|iac)\b/)) {
             return "terraform";
-        } else if (input.match(/\b(skill|learn|course|training|develop|improve)\b/)) {
+        } else if (input.match(/\b(skill|learn|course|training|develop|developing|improve|enhance|qualification|how to)\b/)) {
             return "skill development";
         } else if (input.match(/\b(resume|cv|profile)\b/)) {
             return "resume tips";
