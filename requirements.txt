@@ -14,6 +14,3 @@ python-docx
 numpy
 pandas
 werkzeug
-resume-parser
-job-recommender
-chatgpt-service
