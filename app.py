@@ -1,7 +1,7 @@
 import os
 import logging
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 import werkzeug.utils
 from werkzeug.utils import secure_filename
 from resume_parser import extract_text_from_resume, parse_resume
@@ -119,21 +119,28 @@ def internal_server_error(e):
     flash('An internal server error occurred. Please try again later.', 'danger')
     return redirect(url_for('index'))
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['POST', 'OPTIONS'])
 def chat():
     """API endpoint for the career assistant chatbot"""
+    # Handle OPTIONS request for CORS preflight
+    if request.method == 'OPTIONS':
+        resp = make_response()
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return resp
     try:
         data = request.json
         
         if not data or 'query' not in data:
             return jsonify({'error': 'No query provided'}), 400
         
-        # Check if API key is valid
-        if not is_api_key_valid():
-            return jsonify({
-                'response': "I'm sorry, but the ChatGPT service is not available at the moment. "
-                            "Please try again later or contact support for assistance."
-            })
+        # We don't need to check API validity anymore since we have fallback responses
+        # if not is_api_key_valid():
+        #     return jsonify({
+        #         'response': "I'm sorry, but the ChatGPT service is not available at the moment. "
+        #                     "Please try again later or contact support for assistance."
+        #     })
         
         # Get the query from the request
         query = data['query']
@@ -162,14 +169,19 @@ def chat():
         # Generate response using ChatGPT
         response = generate_chatgpt_response(query, context)
         
-        return jsonify({'response': response})
+        # Create response with CORS headers
+        resp = make_response(jsonify({'response': response}))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
     
     except Exception as e:
         logging.error(f"Error in chat API: {str(e)}")
-        return jsonify({
+        resp = make_response(jsonify({
             'error': 'An error occurred while processing your request.',
             'details': str(e)
-        }), 500
+        }), 500)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -51,29 +51,97 @@ def generate_chatgpt_response(query, context=None):
             system_prompt += "\n\nProvide specific, actionable advice based on the user's profile and their target job."
         
         # Call the OpenAI API
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": query}
-            ],
-            max_tokens=300,
-            temperature=0.7
-        )
-        
-        # Extract and return the generated text
-        return response.choices[0].message.content
+        try:
+            # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+            # Do not change this unless explicitly requested by the user
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": query}
+                ],
+                max_tokens=300,
+                temperature=0.7
+            )
+            
+            # Extract and return the generated text
+            return response.choices[0].message.content
+        except Exception as api_error:
+            logger.error(f"API call error: {str(api_error)}")
+            
+            # If the API call fails, use the fallback responses
+            return generate_fallback_response(query, context)
         
     except Exception as e:
         logger.error(f"Error generating ChatGPT response: {str(e)}")
         return "I'm sorry, I couldn't process your question. Please try again or ask a different question."
 
+def generate_fallback_response(query, context=None):
+    """
+    Generate a fallback response when the API is unavailable
+    
+    Args:
+        query (str): The user's question
+        context (dict, optional): Additional context
+        
+    Returns:
+        str: A fallback response
+    """
+    query_lower = query.lower()
+    
+    # Prepare skills information from context
+    skills_text = ""
+    if context and 'skills' in context and context['skills']:
+        skills_text = ", ".join(context['skills'])
+    
+    missing_skills_text = ""
+    if context and 'missing_skills' in context and context['missing_skills']:
+        missing_skills_text = ", ".join(context['missing_skills'])
+    
+    job_title = ""
+    if context and 'job_title' in context and context['job_title']:
+        job_title = context['job_title']
+    
+    # Check for different types of questions and provide appropriate responses
+    if any(keyword in query_lower for keyword in ['resume', 'cv', 'improve']):
+        skills_advice = ""
+        if skills_text:
+            skills_advice = " Include these skills in your resume: " + skills_text
+        return "To improve your resume, focus on quantifying your achievements and highlighting relevant skills for your target roles. Use action verbs and ensure your experience demonstrates your capabilities clearly." + skills_advice
+    
+    elif any(keyword in query_lower for keyword in ['skill', 'learn', 'develop']):
+        if missing_skills_text:
+            return "Based on your profile, I recommend focusing on developing these key skills: " + missing_skills_text + ". You can learn them through online courses on platforms like Coursera, Udemy, or through hands-on projects."
+        else:
+            return "To develop your skills, consider taking online courses, working on personal projects, contributing to open source, or obtaining relevant certifications in your field."
+    
+    elif any(keyword in query_lower for keyword in ['interview', 'prep', 'question']):
+        skills_advice = ""
+        if skills_text:
+            skills_advice = " Focus on how you have applied these skills: " + skills_text
+        return "Prepare for interviews by researching the company, practicing common questions, and preparing examples that demonstrate your skills and experience." + skills_advice
+    
+    elif any(keyword in query_lower for keyword in ['job', 'search', 'find', 'application']):
+        return "For an effective job search, update your LinkedIn profile, set up job alerts on major platforms, network with professionals in your target field, and tailor each application to the specific role and company."
+    
+    elif any(keyword in query_lower for keyword in ['salary', 'negotiate', 'offer']):
+        return "When negotiating salary, research industry standards, highlight your unique value, consider the total compensation package including benefits, and practice your negotiation approach beforehand."
+    
+    elif any(keyword in query_lower for keyword in ['career', 'path', 'switch', 'change']):
+        return "For a successful career change, identify transferable skills, fill knowledge gaps with targeted learning, network with professionals in your desired field, and consider starting with hybrid roles that bridge your current and target careers."
+    
+    else:
+        # Generic response for other questions
+        return "As a career assistant, I can help with resume optimization, job search strategies, skill development, interview preparation, and career planning. Could you specify which aspect you need help with?"
+
 def is_api_key_valid():
     """Check if the OpenAI API key is valid and working"""
     try:
         # Make a minimal API call to verify the key is working
+        # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+        # Do not change this unless explicitly requested by the user
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "user", "content": "Hello"}
             ],
