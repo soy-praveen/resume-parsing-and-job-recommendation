@@ -40,7 +40,7 @@
                         <i class="fas fa-file-upload"></i>
                     </div>
                     <h3 class="card-title fs-4">Upload Resume</h3>
-                    <p class="card-text">Upload your resume in PDF or DOCX format. Our system supports most professional resume formats.</p>
+                    <p class="card-text">Upload your resume in PDF, DOCX, or TXT format. Our system supports most professional resume formats.</p>
                 </div>
             </div>
         </div>
@@ -93,8 +93,8 @@
                                 <h3 class="fs-5">Drag & Drop your resume here</h3>
                                 <p>or</p>
                                 <label for="resume" class="btn btn-outline-info">Browse Files</label>
-                                <input type="file" id="resume" name="resume" class="d-none" accept=".pdf,.docx">
-                                <p class="mt-2 text-secondary small">Supported formats: PDF, DOCX (Max 16MB)</p>
+                                <input type="file" id="resume" name="resume" class="d-none" accept=".pdf,.docx,.txt">
+                                <p class="mt-2 text-secondary small">Supported formats: PDF, DOCX, TXT (Max 16MB)</p>
                                 <div id="file-info" class="mt-3 d-none">
                                     <div class="d-flex align-items-center justify-content-center">
                                         <i class="fas fa-file-alt me-2 text-info"></i>
@@ -119,8 +119,8 @@
                         <h4 class="h6 text-center mb-4">If you're having trouble with the drag & drop uploader, use this simple upload form:</h4>
                         <form action="{{ url_for('upload_resume') }}" method="post" enctype="multipart/form-data" id="simple-resume-form">
                             <div class="mb-3">
-                                <label for="resume-simple" class="form-label">Select resume file (PDF or DOCX)</label>
-                                <input type="file" id="resume-simple" name="resume" class="form-control" accept=".pdf,.docx">
+                                <label for="resume-simple" class="form-label">Select resume file (PDF, DOCX, or TXT)</label>
+                                <input type="file" id="resume-simple" name="resume" class="form-control" accept=".pdf,.docx,.txt">
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-outline-info">
@@ -214,7 +214,7 @@
                     </h2>
                     <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            We currently support PDF and DOCX file formats for resume uploads. These are the most common formats used in professional settings.
+                            We currently support PDF, DOCX, and TXT file formats for resume uploads. PDF and DOCX are the most common formats used in professional settings, while TXT is useful for simple text resumes.
                         </div>
                     </div>
                 </div>

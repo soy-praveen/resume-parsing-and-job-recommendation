@@ -50,7 +50,7 @@ COMMON_SKILLS = [
 ]
 
 def extract_text_from_resume(file_path, file_extension):
-    """Extract text from a resume file (PDF or DOCX)"""
+    """Extract text from a resume file (PDF, DOCX, or TXT)"""
     try:
         if file_extension == 'pdf':
             # Extract text from PDF
@@ -71,6 +71,12 @@ def extract_text_from_resume(file_path, file_extension):
                 full_text.append(para.text)
             
             return clean_text('\n'.join(full_text))
+        
+        elif file_extension == 'txt':
+            # Extract text from TXT file
+            with open(file_path, 'r', encoding='utf-8') as file:
+                text = file.read()
+            return clean_text(text)
         
         else:
             logging.error(f"Unsupported file extension: {file_extension}")

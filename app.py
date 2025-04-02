@@ -16,8 +16,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "default-dev-secret-key")
 
 # Configure upload folder
-UPLOAD_FOLDER = '/tmp/resume_uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'docx'}
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}  # Added .txt for testing
 
 # Create upload folder if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
@@ -41,14 +41,14 @@ def upload_resume():
     # Check if a file was submitted
     if 'resume' not in request.files:
         flash('No file part', 'danger')
-        return redirect(request.url)
+        return redirect(url_for('index'))
     
     file = request.files['resume']
     
     # Check if user didn't select a file
     if file.filename == '':
         flash('No file selected', 'danger')
-        return redirect(request.url)
+        return redirect(url_for('index'))
     
     # Check if file is allowed
     if file and allowed_file(file.filename):
@@ -86,7 +86,7 @@ def upload_resume():
             flash(f'Error processing resume: {str(e)}', 'danger')
             return redirect(url_for('index'))
     else:
-        flash(f'Unsupported file format. Please upload a PDF or DOCX file.', 'danger')
+        flash(f'Unsupported file format. Please upload a PDF, DOCX, or TXT file.', 'danger')
         return redirect(url_for('index'))
 
 @app.route('/results')

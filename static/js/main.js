@@ -150,18 +150,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log('Handling file selection:', file.name, file.type);
 
-        // Check if file is PDF or DOCX
+        // Check if file is PDF, DOCX, or TXT
         const fileType = file.type;
         const fileExtension = file.name.split('.').pop().toLowerCase();
         console.log('File type:', fileType, 'Extension:', fileExtension);
         
-        const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        const validExtensions = ['pdf', 'docx'];
+        const validTypes = [
+            'application/pdf', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain'
+        ];
+        const validExtensions = ['pdf', 'docx', 'txt'];
 
         // Check both MIME type and extension for better compatibility
         if (!validTypes.includes(fileType) && !validExtensions.includes(fileExtension)) {
             console.error('Invalid file type:', fileType);
-            alert('Please upload a PDF or DOCX file');
+            alert('Please upload a PDF, DOCX, or TXT file');
             resumeInput.value = '';
             return;
         }
