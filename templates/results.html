@@ -295,39 +295,70 @@
                 </h2>
                 
                 {% if job_recommendations.jobs %}
-                    {% set least_matching_job = job_recommendations.jobs|sort(attribute='match_score')|first %}
-                    
-                    <div class="alert alert-info">
-                        <h5 class="h6 mb-2">Based on your lowest matching job: <strong>{{ least_matching_job.title }}</strong> ({{ least_matching_job.match_score }}% match)</h5>
-                        <p>Improving these skills could significantly enhance your job matches:</p>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="jobSelect" class="form-label mb-2">Select the job you're interested in:</label>
+                                <select class="form-select" id="jobSelect">
+                                    {% for job in job_recommendations.jobs %}
+                                        <option value="{{ loop.index0 }}" {% if loop.first %}selected{% endif %}>
+                                            {{ job.title }} ({{ job.match_score }}% match)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="d-flex flex-wrap mb-4">
-                        {% for skill in least_matching_job.missing_skills %}
-                        <span class="badge bg-danger me-2 mb-2 p-2">{{ skill }}</span>
-                        {% endfor %}
+                    {% for job in job_recommendations.jobs %}
+                    <div class="job-skills-section" id="job-skills-{{ loop.index0 }}" style="{% if not loop.first %}display: none;{% endif %}">
+                        <div class="alert alert-info">
+                            <h5 class="h6 mb-2">For <strong>{{ job.title }}</strong> ({{ job.match_score }}% match)</h5>
+                            <p>Developing these skills could significantly enhance your qualifications:</p>
+                        </div>
+                        
+                        <div class="d-flex flex-wrap mb-4">
+                            {% for skill in job.missing_skills %}
+                            <span class="badge bg-danger me-2 mb-2 p-2">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
+                    {% endfor %}
                     
-                    <!-- Questions to consider section -->
-                    <h5 class="mb-3">Questions to Consider:</h5>
-                    <ul class="list-group">
-                        <li class="list-group-item bg-body-tertiary border-0">
-                            <i class="fas fa-question-circle text-info me-2"></i>
-                            Which of these missing skills align with your career goals?
-                        </li>
-                        <li class="list-group-item bg-body-tertiary border-0">
-                            <i class="fas fa-question-circle text-info me-2"></i>
-                            Are there online courses or certifications that could help you gain these skills?
-                        </li>
-                        <li class="list-group-item bg-body-tertiary border-0">
-                            <i class="fas fa-question-circle text-info me-2"></i>
-                            Could you highlight any related skills or projects that demonstrate transferable knowledge?
-                        </li>
-                        <li class="list-group-item bg-body-tertiary border-0">
-                            <i class="fas fa-question-circle text-info me-2"></i>
-                            Are there any professional groups or communities you could join to develop these skills?
-                        </li>
-                    </ul>
+                    <!-- Career Assistant Chatbot -->
+                    <div class="mt-4">
+                        <h3 class="h5 mb-3">
+                            <i class="fas fa-robot text-info me-2"></i>Career Assistant
+                        </h3>
+                        
+                        <div class="card bg-body-tertiary border-0 mb-3">
+                            <div class="card-body" id="chatMessages" style="max-height: 300px; overflow-y: auto;">
+                                <div class="d-flex mb-3">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-robot text-info fs-4"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="mb-0">Hi there! I'm your Career Assistant. I can help you with questions about:</p>
+                                        <ul class="mb-0">
+                                            <li>How to develop the skills shown above</li>
+                                            <li>Resources for learning new skills</li>
+                                            <li>Tips for improving your resume</li>
+                                            <li>Job search strategies</li>
+                                        </ul>
+                                        <p class="mb-0 mt-2">What would you like to know?</p>
+                                    </div>
+                                </div>
+                                <!-- Chat messages will appear here -->
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="chatInput" placeholder="Type your question here...">
+                            <button class="btn btn-info" type="button" id="sendMessage">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
                 {% else %}
                 <p class="text-muted">No job recommendations were generated to determine skills to develop.</p>
                 {% endif %}
@@ -349,6 +380,188 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Job selector functionality
+    const jobSelect = document.getElementById('jobSelect');
+    const jobSkillsSections = document.querySelectorAll('.job-skills-section');
+    
+    if (jobSelect) {
+        jobSelect.addEventListener('change', function() {
+            const selectedIndex = this.value;
+            
+            // Hide all job skills sections
+            jobSkillsSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected section
+            const selectedSection = document.getElementById(`job-skills-${selectedIndex}`);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        });
+    }
+    
+    // Chatbot functionality
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Simple responses for the chatbot
+    const responses = {
+        "default": "I don't have specific information about that. Try asking about skill development, resume tips, or job search strategies.",
+        "greeting": ["Hello!", "Hi there!", "How can I help you today?"],
+        "thanks": ["You're welcome!", "Happy to help!", "Anytime!"],
+        "skill development": [
+            "To develop new skills, consider: 1) Online courses on platforms like Coursera, Udemy, or LinkedIn Learning, 2) Hands-on projects to apply what you've learned, 3) Joining professional communities or forums.",
+            "When developing technical skills, start with the fundamentals and work on real projects. Platforms like GitHub can help showcase your work.",
+            "Consider certifications relevant to your field. They can add credibility to your resume and validate your skills."
+        ],
+        "resume tips": [
+            "Make sure your resume highlights relevant skills and quantifies your achievements with numbers and metrics.",
+            "Tailor your resume for each job application to match the specific keywords and requirements in the job description.",
+            "Keep your resume concise - typically 1-2 pages is ideal, with the most relevant information easy to spot."
+        ],
+        "job search": [
+            "Leverage your professional network and platforms like LinkedIn to discover opportunities that might not be publicly posted.",
+            "Research companies thoroughly before applying and tailor your application to show how you can solve their specific needs.",
+            "Consider working with recruiters who specialize in your industry for access to more opportunities."
+        ],
+        "interview": [
+            "Prepare for interviews by researching the company, practicing common questions, and preparing examples of your work.",
+            "Use the STAR method (Situation, Task, Action, Result) to structure your answers to behavioral questions.",
+            "Always come prepared with thoughtful questions to ask the interviewer about the role and company."
+        ],
+        "devops": [
+            "To develop DevOps skills: 1) Learn cloud platforms like AWS, Azure, or GCP, 2) Master containerization with Docker and orchestration with Kubernetes, 3) Practice Infrastructure as Code using Terraform or CloudFormation, 4) Learn CI/CD pipelines using Jenkins, GitLab CI, or GitHub Actions.",
+            "Essential DevOps tools to learn include: Git for version control, Docker for containerization, Kubernetes for orchestration, Terraform for infrastructure as code, and monitoring tools like Prometheus and Grafana.",
+            "For DevOps certifications, consider: AWS Certified DevOps Engineer, Microsoft Certified: DevOps Engineer Expert, Certified Kubernetes Administrator (CKA), or HashiCorp Certified: Terraform Associate."
+        ],
+        "docker": [
+            "Docker is essential for DevOps. Start by understanding container concepts, then practice building custom images with Dockerfiles, and finally learn to manage multi-container applications with Docker Compose.",
+            "For learning Docker, try the official Docker documentation, practical courses on Udemy or Pluralsight, and building your own containerized applications for hands-on experience."
+        ],
+        "kubernetes": [
+            "Kubernetes is critical for DevOps roles. Begin with understanding its architecture and components, then practice deployments, services, and scaling. Consider getting the Certified Kubernetes Administrator (CKA) certification.",
+            "To learn Kubernetes, try setting up a local cluster with minikube, take 'Kubernetes the Hard Way' by Kelsey Hightower, and practice with real-world scenarios on platforms like Katacoda."
+        ],
+        "cloud": [
+            "For cloud skills, focus on at least one major provider (AWS, Azure, GCP) and learn their core services like computing, storage, networking, and security features.",
+            "Cloud certifications like AWS Certified Solutions Architect, Azure Administrator, or Google Professional Cloud Architect can significantly boost your DevOps resume.",
+            "For hands-on cloud practice, use the free tier of services, build serverless applications, create infrastructure as code templates, and set up CI/CD pipelines in the cloud."
+        ],
+        "ci/cd": [
+            "For CI/CD skills, learn tools like Jenkins, GitLab CI/CD, GitHub Actions, or CircleCI. Practice creating pipelines that automate building, testing, and deploying applications.",
+            "When implementing CI/CD, focus on aspects like automated testing, code quality checks, security scanning, and deployment strategies like blue-green or canary deployments."
+        ],
+        "terraform": [
+            "Terraform is a leading infrastructure as code tool. Learn to write HCL (HashiCorp Configuration Language), manage state files, create reusable modules, and implement best practices for production environments.",
+            "For Terraform learning resources, check out HashiCorp's official documentation, their free learning portal, and the 'Terraform: Up & Running' book by Yevgeniy Brikman."
+        ]
+    };
+    
+    // Function to determine which response category matches the user's input
+    function getResponseCategory(input) {
+        input = input.toLowerCase();
+        
+        if (input.match(/\b(hi|hello|hey)\b/)) {
+            return "greeting";
+        } else if (input.match(/\b(thanks|thank you|thx)\b/)) {
+            return "thanks";
+        } else if (input.match(/\b(devops|sre|site reliability|deployment|automation)\b/)) {
+            return "devops";
+        } else if (input.match(/\b(docker|container|containerization)\b/)) {
+            return "docker";
+        } else if (input.match(/\b(kubernetes|k8s|orchestration|cluster)\b/)) {
+            return "kubernetes";
+        } else if (input.match(/\b(cloud|aws|azure|gcp|google cloud)\b/)) {
+            return "cloud";
+        } else if (input.match(/\b(ci\/cd|ci cd|pipeline|jenkins|github action|continuous integration|continuous delivery)\b/)) {
+            return "ci/cd";
+        } else if (input.match(/\b(terraform|infrastructure as code|iac)\b/)) {
+            return "terraform";
+        } else if (input.match(/\b(skill|learn|course|training|develop|improve)\b/)) {
+            return "skill development";
+        } else if (input.match(/\b(resume|cv|profile)\b/)) {
+            return "resume tips";
+        } else if (input.match(/\b(job|search|find|opportunity|application|apply)\b/)) {
+            return "job search";
+        } else if (input.match(/\b(interview|question|preparation|prepare)\b/)) {
+            return "interview";
+        } else {
+            return "default";
+        }
+    }
+    
+    // Function to get a random response from a category
+    function getRandomResponse(category) {
+        const responseOptions = responses[category];
+        if (Array.isArray(responseOptions)) {
+            return responseOptions[Math.floor(Math.random() * responseOptions.length)];
+        }
+        return responseOptions;
+    }
+    
+    // Function to add a message to the chat
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'd-flex mb-3';
+        
+        if (isUser) {
+            messageDiv.innerHTML = `
+                <div class="flex-grow-1 text-end">
+                    <div class="bg-info text-white p-2 rounded d-inline-block">
+                        ${message}
+                    </div>
+                </div>
+                <div class="flex-shrink-0 ms-3">
+                    <i class="fas fa-user text-info fs-4"></i>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="flex-shrink-0">
+                    <i class="fas fa-robot text-info fs-4"></i>
+                </div>
+                <div class="ms-3">
+                    <p class="mb-0">${message}</p>
+                </div>
+            `;
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Function to handle sending a message
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, true);
+        chatInput.value = '';
+        
+        // Simulate thinking time
+        setTimeout(() => {
+            const category = getResponseCategory(message);
+            const response = getRandomResponse(category);
+            addMessage(response);
+        }, 500);
+    }
+    
+    // Event listeners for the chatbot
+    if (sendButton) {
+        sendButton.addEventListener('click', sendMessage);
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+    
     // Skills visualization with Chart.js
     const skillsChartEl = document.getElementById('skillsChart');
     
