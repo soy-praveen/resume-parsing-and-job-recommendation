@@ -1,0 +1,8 @@
+Flask
+Werkzeug
+resume-parser
+joblib
+openai
+python-dotenv
+uuid
+logging
