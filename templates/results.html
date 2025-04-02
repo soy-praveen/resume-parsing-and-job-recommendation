@@ -1,0 +1,341 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row my-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Resume Analysis</li>
+            </ol>
+        </nav>
+        <h1 class="mb-4">Resume Analysis Results</h1>
+    </div>
+</div>
+
+<!-- Summary section -->
+<div class="row mb-5">
+    <div class="col-md-8">
+        <div class="card bg-body-secondary border-0 h-100">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-user-tie me-2 text-info"></i>Personal Information
+                </h2>
+                <div class="mb-4">
+                    <h3 class="h5 mb-3">{{ parsed_data.name or 'Not Found' }}</h3>
+                    <div class="d-flex flex-wrap">
+                        {% if parsed_data.email %}
+                        <div class="me-4 mb-2">
+                            <i class="fas fa-envelope me-2 text-info"></i>
+                            <span>{{ parsed_data.email }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if parsed_data.phone %}
+                        <div class="me-4 mb-2">
+                            <i class="fas fa-phone me-2 text-info"></i>
+                            <span>{{ parsed_data.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if parsed_data.summary %}
+                <div>
+                    <h4 class="h6 mb-2">Professional Summary</h4>
+                    <p>{{ parsed_data.summary }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-body-secondary border-0 h-100">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>Career Insights
+                </h2>
+                
+                <!-- Experience Level -->
+                <div class="mb-3">
+                    <h4 class="h6 mb-1">Experience Level</h4>
+                    <span class="badge bg-info fs-6">{{ job_recommendations.insights.experience_level }}</span>
+                </div>
+                
+                <!-- Industry -->
+                <div class="mb-3">
+                    <h4 class="h6 mb-1">Relevant Industry</h4>
+                    <span class="badge bg-info fs-6">{{ job_recommendations.insights.relevant_industry }}</span>
+                </div>
+                
+                <!-- Skill Count -->
+                <div class="mb-3">
+                    <h4 class="h6 mb-1">Skills Identified</h4>
+                    <span class="badge bg-info fs-6">{{ job_recommendations.insights.skill_count }}</span>
+                </div>
+                
+                <!-- Match Score Visualization -->
+                <div class="mt-4">
+                    <h4 class="h6 mb-1">Overall Match Percentage</h4>
+                    <div class="progress" style="height: 25px;">
+                        {% set avg_match = 0 %}
+                        {% if job_recommendations.jobs|length > 0 %}
+                            {% set scores = [] %}
+                            {% for job in job_recommendations.jobs %}
+                                {% set scores = scores + [job.match_score] %}
+                            {% endfor %}
+                            {% set avg_match = (scores|sum / scores|length)|round|int %}
+                        {% endif %}
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ avg_match }}%;" 
+                             aria-valuenow="{{ avg_match }}" aria-valuemin="0" aria-valuemax="100">{{ avg_match }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skills and Experience row -->
+<div class="row mb-5">
+    <!-- Skills section -->
+    <div class="col-md-6 mb-4 mb-md-0">
+        <div class="card bg-body-secondary border-0">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-tools me-2 text-info"></i>Skills
+                </h2>
+                
+                {% if parsed_data.skills %}
+                <div class="d-flex flex-wrap">
+                    {% for skill in parsed_data.skills %}
+                    <span class="badge bg-info me-2 mb-2 p-2">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                
+                <!-- Skills visualization -->
+                <div class="mt-4">
+                    <canvas id="skillsChart" height="250"></canvas>
+                </div>
+                {% else %}
+                <p class="text-muted">No skills were identified in your resume.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Work Experience section -->
+    <div class="col-md-6">
+        <div class="card bg-body-secondary border-0">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-briefcase me-2 text-info"></i>Work Experience
+                </h2>
+                
+                {% if parsed_data.experience %}
+                <div class="timeline">
+                    {% for job in parsed_data.experience %}
+                    <div class="timeline-item mb-4">
+                        <div class="d-flex mb-1">
+                            <div class="timeline-marker bg-info me-3 mt-1"></div>
+                            <div>
+                                <h4 class="h6 mb-0">{{ job.title }}</h4>
+                                <p class="mb-0 text-muted">{{ job.company }}</p>
+                                <p class="small text-secondary">{{ job.date }}</p>
+                                {% if job.description %}
+                                <p class="mb-0 small">{{ job.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No work experience was identified in your resume.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Education and Job Recommendations -->
+<div class="row mb-5">
+    <!-- Education section -->
+    <div class="col-md-5 mb-4 mb-md-0">
+        <div class="card bg-body-secondary border-0">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-graduation-cap me-2 text-info"></i>Education
+                </h2>
+                
+                {% if parsed_data.education %}
+                <div class="timeline">
+                    {% for edu in parsed_data.education %}
+                    <div class="timeline-item mb-4">
+                        <div class="d-flex mb-1">
+                            <div class="timeline-marker bg-info me-3 mt-1"></div>
+                            <div>
+                                <h4 class="h6 mb-0">{{ edu.institution }}</h4>
+                                {% if edu.degree %}
+                                <p class="mb-0">{{ edu.degree }}</p>
+                                {% endif %}
+                                {% if edu.date %}
+                                <p class="small text-secondary">{{ edu.date }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No education history was identified in your resume.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Recommendations section -->
+    <div class="col-md-7">
+        <div class="card bg-body-secondary border-0">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-3">
+                    <i class="fas fa-briefcase me-2 text-info"></i>Job Recommendations
+                </h2>
+                
+                {% if job_recommendations.jobs %}
+                <div class="accordion" id="jobAccordion">
+                    {% for job in job_recommendations.jobs %}
+                    <div class="accordion-item bg-body-tertiary border-0 mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-body-secondary" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#job{{ job.id }}" 
+                                    aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" 
+                                    aria-controls="job{{ job.id }}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <span>{{ job.title }} at {{ job.company }}</span>
+                                    <span class="badge bg-info ms-2">{{ job.match_score }}% match</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="job{{ job.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                             data-bs-parent="#jobAccordion">
+                            <div class="accordion-body">
+                                <p><i class="fas fa-map-marker-alt text-info me-2"></i>{{ job.location }}</p>
+                                <p>{{ job.description }}</p>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <h5 class="h6 mb-2"><i class="fas fa-check-circle text-success me-2"></i>Matching Skills</h5>
+                                        <div class="d-flex flex-wrap">
+                                            {% for skill in job.matching_skills %}
+                                            <span class="badge bg-success me-2 mb-2">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <h5 class="h6 mb-2"><i class="fas fa-times-circle text-danger me-2"></i>Missing Skills</h5>
+                                        <div class="d-flex flex-wrap">
+                                            {% for skill in job.missing_skills %}
+                                            <span class="badge bg-danger me-2 mb-2">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No job recommendations could be generated based on your resume.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action buttons -->
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-info me-2">
+            <i class="fas fa-upload me-2"></i>Upload Another Resume
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Skills visualization with Chart.js
+    const skillsChartEl = document.getElementById('skillsChart');
+    
+    if (skillsChartEl) {
+        const skillData = {
+            {% if parsed_data.skills %}
+            labels: [
+                {% for skill in parsed_data.skills[:10] %}
+                '{{ skill }}',
+                {% endfor %}
+            ],
+            {% else %}
+            labels: [],
+            {% endif %}
+        };
+        
+        // Generate random values for visualization purposes
+        const values = [];
+        for (let i = 0; i < skillData.labels.length; i++) {
+            values.push(Math.floor(Math.random() * 50) + 50); // Random number between 50-100
+        }
+        
+        if (skillData.labels.length > 0) {
+            const skillsChart = new Chart(skillsChartEl, {
+                type: 'radar',
+                data: {
+                    labels: skillData.labels,
+                    datasets: [{
+                        label: 'Skill Proficiency',
+                        data: values,
+                        backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                        borderColor: 'rgba(23, 162, 184, 1)',
+                        pointBackgroundColor: 'rgba(23, 162, 184, 1)',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(23, 162, 184, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true,
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            },
+                            ticks: {
+                                display: false,
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

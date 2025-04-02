@@ -1,0 +1,259 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center my-5">
+    <!-- Hero section -->
+    <div class="col-md-6">
+        <h1 class="display-4 fw-bold mb-4">Transform Your Resume into Opportunities</h1>
+        <p class="lead mb-4">Upload your resume, and our AI will analyze it, extract your skills and experience, and match you with relevant job opportunities.</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a href="#upload-section" class="btn btn-info btn-lg px-4 me-md-2">Get Started</a>
+            <a href="#features" class="btn btn-outline-secondary btn-lg px-4">Learn More</a>
+        </div>
+    </div>
+    <div class="col-md-6 d-flex justify-content-center">
+        <!-- Resume SVG illustration -->
+        <svg width="350" height="350" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="2" width="16" height="20" rx="2" stroke="var(--bs-info)" stroke-width="2"/>
+            <circle cx="12" cy="9" r="3" stroke="var(--bs-light)" stroke-width="2"/>
+            <path d="M6 21C6 18.7909 8.68629 17 12 17C15.3137 17 18 18.7909 18 21" stroke="var(--bs-light)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 5H16" stroke="var(--bs-light)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+</div>
+
+<!-- Features section -->
+<section id="features" class="py-5">
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <h2 class="fw-bold">How It Works</h2>
+            <p class="lead">Our intelligent system analyzes your resume and provides valuable insights</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 bg-body-secondary">
+                <div class="card-body text-center">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center mb-3 fs-2 text-info">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <h3 class="card-title fs-4">Upload Resume</h3>
+                    <p class="card-text">Upload your resume in PDF or DOCX format. Our system supports most professional resume formats.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 bg-body-secondary">
+                <div class="card-body text-center">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center mb-3 fs-2 text-info">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="card-title fs-4">AI Analysis</h3>
+                    <p class="card-text">Our AI extracts key information from your resume, including skills, experience, and education.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 bg-body-secondary">
+                <div class="card-body text-center">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center mb-3 fs-2 text-info">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="card-title fs-4">Job Matching</h3>
+                    <p class="card-text">Get personalized job recommendations based on your skills and experience profile.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upload section -->
+<section id="upload-section" class="py-5">
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <h2 class="fw-bold">Upload Your Resume</h2>
+            <p class="lead">Let our AI analyze your resume and match you with suitable jobs</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-body-secondary border-0">
+                <div class="card-body p-4">
+                    <form action="{{ url_for('upload_resume') }}" method="post" enctype="multipart/form-data" id="resume-form">
+                        <div class="mb-4">
+                            <div class="upload-area p-5 border border-2 border-dashed rounded text-center" id="dropzone">
+                                <i class="fas fa-file-upload fs-1 text-info mb-3"></i>
+                                <h3 class="fs-5">Drag & Drop your resume here</h3>
+                                <p>or</p>
+                                <label for="resume" class="btn btn-outline-info">Browse Files</label>
+                                <input type="file" id="resume" name="resume" class="d-none" accept=".pdf,.docx" required>
+                                <p class="mt-2 text-secondary small">Supported formats: PDF, DOCX (Max 16MB)</p>
+                                <div id="file-info" class="mt-3 d-none">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-file-alt me-2 text-info"></i>
+                                        <span id="file-name">resume.pdf</span>
+                                        <button type="button" class="btn btn-sm text-danger ms-2" id="remove-file">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-info btn-lg" id="submit-btn">
+                                <span class="spinner-border spinner-border-sm d-none me-2" id="loading-spinner" role="status" aria-hidden="true"></span>
+                                Analyze Resume
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it works section -->
+<section class="py-5">
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <h2 class="fw-bold">Why Choose ResuMatch?</h2>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="d-flex">
+                <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3 text-info">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold">Fast Analysis</h3>
+                    <p>Get your resume analyzed and receive job matches in seconds, not hours.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="d-flex">
+                <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3 text-info">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold">Privacy First</h3>
+                    <p>Your data is processed securely and never shared with third parties.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="d-flex">
+                <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3 text-info">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold">Detailed Insights</h3>
+                    <p>Get comprehensive analysis of your resume quality and potential improvements.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="d-flex">
+                <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3 text-info">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold">Accurate Matching</h3>
+                    <p>Our AI algorithms ensure you only see jobs that match your qualifications.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ section -->
+<section class="py-5">
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <h2 class="fw-bold">Frequently Asked Questions</h2>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="accordion" id="faqAccordion">
+                <!-- FAQ Item 1 -->
+                <div class="accordion-item bg-body-tertiary border-0 mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-body-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+                            What file formats do you support?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We currently support PDF and DOCX file formats for resume uploads. These are the most common formats used in professional settings.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ Item 2 -->
+                <div class="accordion-item bg-body-tertiary border-0 mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-body-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                            How accurate is the AI analysis?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Our AI uses advanced natural language processing techniques to extract information from your resume. While we strive for high accuracy, results may vary depending on your resume format and structure. We continuously improve our algorithms based on user feedback.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ Item 3 -->
+                <div class="accordion-item bg-body-tertiary border-0 mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-body-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                            Is my resume data secure?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, we take data security seriously. Your resume is processed securely, and we don't store your resume file after processing. The extracted information is used only for analysis and matching purposes.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ Item 4 -->
+                <div class="accordion-item bg-body-tertiary border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-body-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                            How do job recommendations work?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Our system analyzes the skills, experience, and education extracted from your resume and matches them against our job database. We consider factors like skill match, experience level, and industry relevance to provide the most appropriate job recommendations.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // When the script is loaded, the page is ready
+    });
+</script>
+{% endblock %}

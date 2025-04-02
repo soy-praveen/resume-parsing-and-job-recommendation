@@ -1,0 +1,100 @@
+/* Custom styles for ResuMatch application */
+
+/* Timeline styles for experience and education */
+.timeline-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.timeline-item:not(:last-child) {
+    position: relative;
+}
+
+.timeline-item:not(:last-child):after {
+    content: '';
+    position: absolute;
+    left: 5.5px;
+    top: 12px;
+    height: calc(100% - 12px);
+    width: 1px;
+    background-color: var(--bs-info);
+}
+
+/* Upload area styling */
+.upload-area {
+    transition: all 0.3s ease;
+}
+
+.upload-area.border-info {
+    background-color: rgba(23, 162, 184, 0.05);
+}
+
+.upload-area.has-file {
+    background-color: rgba(23, 162, 184, 0.05);
+}
+
+/* Breadcrumb styling */
+.breadcrumb-item a {
+    color: var(--bs-info);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 1.5s ease-in-out;
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Feature icons */
+.feature-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+}
+
+/* Accordion styling */
+.accordion-button:not(.collapsed) {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: var(--bs-info);
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Back to top button (if needed) */
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--bs-info);
+    color: white;
+    text-align: center;
+    line-height: 40px;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.back-to-top:hover {
+    background-color: var(--bs-info-darker);
+}
