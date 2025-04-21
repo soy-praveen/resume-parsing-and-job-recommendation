@@ -8,14 +8,20 @@ skill improvement, and job search advice.
 import os
 import logging
 from openai import OpenAI
+import backoff
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)  # Changed to DEBUG for more detailed logs
 logger = logging.getLogger(__name__)
 
-# Initialize the OpenAI client
-client = OpenAI(api_key="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")
+# Initialize the OpenAI client with environment variable
+# Never hardcode API keys in your code
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+# Add backoff decorator to handle rate limiting and transient errors
+@backoff.on_exception(backoff.expo, 
+                     (Exception),
+                     max_tries=3)
 def generate_chatgpt_response(query, context=None):
     """
     Generate a response from ChatGPT based on the user's query.
@@ -45,10 +51,20 @@ def generate_chatgpt_response(query, context=None):
                 context_details.append(f"Job user is interested in: {context['job_title']}")
                 
             if 'experience' in context and context['experience']:
-                context_details.append(f"User's experience: {context['experience']}")
+                experience_summary = []
+                for exp in context['experience']:
+                    if isinstance(exp, dict):
+                        exp_str = f"{exp.get('title', 'Role')} at {exp.get('company', 'Company')}"
+                        experience_summary.append(exp_str)
+                context_details.append(f"User's experience: {'; '.join(experience_summary)}")
                 
             if 'education' in context and context['education']:
-                context_details.append(f"User's education: {context['education']}")
+                edu_summary = []
+                for edu in context['education']:
+                    if isinstance(edu, dict):
+                        edu_str = f"{edu.get('degree', 'Degree')} from {edu.get('institution', 'Institution')}"
+                        edu_summary.append(edu_str)
+                context_details.append(f"User's education: {'; '.join(edu_summary)}")
             
             if context_details:
                 system_prompt += "\n\n" + "\n".join(context_details)
@@ -62,7 +78,7 @@ def generate_chatgpt_response(query, context=None):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
-            max_tokens=500,  # Increased token limit for more detailed responses
+            max_tokens=500,
             temperature=0.7
         )
         
@@ -70,7 +86,7 @@ def generate_chatgpt_response(query, context=None):
         return response.choices[0].message.content
         
     except Exception as e:
-        logger.error(f"Error generating ChatGPT response: {str(e)}")
+        logger.error(f"Error generating ChatGPT response: {str(e)}", exc_info=True)
         return "I'm sorry, I encountered an issue connecting to the AI service. Please try again in a moment."
 
 def is_api_key_valid():
@@ -78,7 +94,7 @@ def is_api_key_valid():
     try:
         # Make a minimal API call to verify the key is working
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-3.5-turbo",  # Using a cheaper model for validation
             messages=[
                 {"role": "user", "content": "Hello"}
             ],
@@ -86,7 +102,7 @@ def is_api_key_valid():
         )
         return True
     except Exception as e:
-        logger.error(f"API key validation error: {str(e)}")
+        logger.error(f"API key validation error: {str(e)}", exc_info=True)
         return False
 
 # Example usage
