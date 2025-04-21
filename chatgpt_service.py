@@ -1,4 +1,11 @@
-import os
+"""
+ ChatGPT integration service for the resume analyzer application.
+ This module handles the integration with OpenAI's API to provide
+ intelligent responses to user queries about career development,
+ skill improvement, and job search advice.
+ """
+ 
+ import os
  import logging
  import json
  from openai import OpenAI
