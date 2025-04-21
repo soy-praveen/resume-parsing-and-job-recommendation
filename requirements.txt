@@ -14,4 +14,3 @@ python-docx
 numpy
 pandas
 werkzeug
-backoff
