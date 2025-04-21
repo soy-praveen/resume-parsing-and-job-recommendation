@@ -2,6 +2,8 @@ import os
 import re
 import logging
 import spacy
+from datetime import datetime
+from dateutil import parser as date_parser
 from PyPDF2 import PdfReader
 import docx
 import nltk
@@ -26,9 +28,12 @@ except OSError:
 
 # Regex patterns
 EMAIL_REGEX = re.compile(r'[\w\.-]+@[\w\.-]+\.\w+')
-PHONE_REGEX = re.compile(r'(\+\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{3}[-\s]?\d{4}')
+PHONE_REGEX = re.compile(r'(\+\d{1,3}[-\s]?)?\(?\d{2,4}\)?[-\s]?\d{3,5}[-\s]?\d{4}')
+LINKEDIN_REGEX = re.compile(r'(https?://)?(www\.)?linkedin\.com/in/[a-zA-Z0-9\-\_]+')
+GITHUB_REGEX = re.compile(r'(https?://)?(www\.)?github\.com/[a-zA-Z0-9\-\_]+')
+LOCATION_REGEX = re.compile(r'\b(?:[A-Z][a-z]+(?:,)?\s?){1,3}(India|USA|UK|Canada|Germany|Australia|France|Singapore)?\b')
 
-# Common skills
+# Skills list (expandable)
 COMMON_SKILLS = [
     "python", "java", "javascript", "c++", "c#", "ruby", "php", "swift", "kotlin", "go", "rust",
     "html", "css", "react", "angular", "vue", "node.js", "express", "django", "flask", "spring",
@@ -40,6 +45,10 @@ COMMON_SKILLS = [
     "agile", "scrum", "critical thinking", "time management", "creativity",
     "git", "api", "rest", "graphql", "microservices", "linux", "unix", "bash"
 ]
+
+# Degree and Cert patterns
+DEGREE_KEYWORDS = ['bachelor', 'master', 'b.sc', 'b.tech', 'm.sc', 'm.tech', 'mba', 'phd']
+CERTIFICATION_KEYWORDS = ['certified', 'certification', 'completed course', 'diploma']
 
 def extract_text_from_resume(file_path, file_extension):
     try:
@@ -65,6 +74,9 @@ def extract_text_from_resume(file_path, file_extension):
 def extract_contact_info(text):
     email = EMAIL_REGEX.search(text)
     phone = PHONE_REGEX.search(text)
+    linkedin = LINKEDIN_REGEX.search(text)
+    github = GITHUB_REGEX.search(text)
+    location = LOCATION_REGEX.search(text)
     
     lines = text.splitlines()
     potential_name = next((line for line in lines if line.strip()), "")
@@ -74,7 +86,10 @@ def extract_contact_info(text):
     return {
         'name': potential_name.strip(),
         'email': email.group(0) if email else "",
-        'phone': phone.group(0) if phone else ""
+        'phone': phone.group(0) if phone else "",
+        'linkedin': linkedin.group(0) if linkedin else "",
+        'github': github.group(0) if github else "",
+        'location': location.group(0) if location else ""
     }
 
 def extract_skills(text):
@@ -90,8 +105,30 @@ def extract_skills(text):
     return sorted(set(found_skills))
 
 def extract_education(text):
-    # Placeholder (future implementation)
-    return []
+    education = []
+    for line in text.splitlines():
+        if any(degree in line.lower() for degree in DEGREE_KEYWORDS):
+            education.append(line.strip())
+    return education
+
+def extract_certifications(text):
+    certifications = []
+    for line in text.splitlines():
+        if any(cert in line.lower() for cert in CERTIFICATION_KEYWORDS):
+            certifications.append(line.strip())
+    return certifications
+
+def extract_languages(text):
+    languages_list = ['english', 'hindi', 'french', 'german', 'spanish', 'mandarin', 'tamil', 'telugu']
+    found = [lang.title() for lang in languages_list if lang in text.lower()]
+    return sorted(found)
+
+def extract_projects(text):
+    projects = []
+    for line in text.splitlines():
+        if any(word in line.lower() for word in ['project', 'portfolio', 'system']):
+            projects.append(line.strip())
+    return projects
 
 def extract_experience(text):
     experience = []
@@ -140,6 +177,21 @@ def extract_experience(text):
 
     return experience
 
+def calculate_total_experience(experience):
+    total_months = 0
+    for exp in experience:
+        date_range = exp.get('date', '').lower()
+        dates = re.split(r'[-–—to\s]+', date_range)
+        try:
+            start = date_parser.parse(dates[0], fuzzy=True)
+            end = datetime.now() if len(dates) < 2 or dates[1] in ['present', 'current', 'now'] else date_parser.parse(dates[1], fuzzy=True)
+            total_months += (end.year - start.year) * 12 + (end.month - start.month)
+        except Exception:
+            continue
+    years = total_months // 12
+    months = total_months % 12
+    return f"{years} years {months} months" if years else f"{months} months"
+
 def extract_summary(text):
     summary_keywords = ['summary', 'professional summary', 'profile', 'objective', 'about me']
     lines = text.splitlines()
@@ -157,7 +209,6 @@ def extract_summary(text):
             break
 
     if not summary:
-        # fallback: first paragraph without email/phone
         paragraphs = text.split('\n\n')
         if paragraphs:
             first_para = paragraphs[0].strip()
@@ -168,12 +219,20 @@ def extract_summary(text):
 
 def parse_resume(text):
     contact_info = extract_contact_info(text)
+    experience = extract_experience(text)
     return {
         'name': contact_info['name'],
         'email': contact_info['email'],
         'phone': contact_info['phone'],
+        'location': contact_info['location'],
+        'linkedin': contact_info['linkedin'],
+        'github': contact_info['github'],
         'summary': extract_summary(text),
         'skills': extract_skills(text),
-        'education': extract_education(text),
-        'experience': extract_experience(text)
+        'experience': experience,
+        'total_experience': calculate_total_experience(experience),
+        'degrees': extract_education(text),
+        'certifications': extract_certifications(text),
+        'languages': extract_languages(text),
+        'projects': extract_projects(text)
     }
