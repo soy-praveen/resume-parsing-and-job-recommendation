@@ -9,9 +9,9 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from utils import clean_text
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-# Download NLTK resources if not already downloaded
+# Download NLTK resources if missing
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -24,11 +24,11 @@ except OSError:
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-# Compile regex patterns for common data
+# Regex patterns
 EMAIL_REGEX = re.compile(r'[\w\.-]+@[\w\.-]+\.\w+')
-PHONE_REGEX = re.compile(r'(\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}')
+PHONE_REGEX = re.compile(r'(\+\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{3}[-\s]?\d{4}')
 
-# Common skills list for extraction
+# Common skills
 COMMON_SKILLS = [
     "python", "java", "javascript", "c++", "c#", "ruby", "php", "swift", "kotlin", "go", "rust",
     "html", "css", "react", "angular", "vue", "node.js", "express", "django", "flask", "spring",
@@ -43,115 +43,98 @@ COMMON_SKILLS = [
 
 def extract_text_from_resume(file_path, file_extension):
     try:
-        if file_extension == 'pdf':
-            pdf_reader = PdfReader(file_path)
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
+        if file_extension.lower() == 'pdf':
+            text = ''
+            reader = PdfReader(file_path)
+            for page in reader.pages:
+                text += page.extract_text() + '\n'
             return clean_text(text)
-        elif file_extension == 'docx':
+        elif file_extension.lower() == 'docx':
             doc = docx.Document(file_path)
-            full_text = []
-            for para in doc.paragraphs:
-                full_text.append(para.text)
-            return clean_text('\n'.join(full_text))
-        elif file_extension == 'txt':
-            with open(file_path, 'r', encoding='utf-8') as file:
-                text = file.read()
-            return clean_text(text)
+            return clean_text('\n'.join(para.text for para in doc.paragraphs))
+        elif file_extension.lower() == 'txt':
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return clean_text(f.read())
         else:
             logging.error(f"Unsupported file extension: {file_extension}")
             return None
     except Exception as e:
-        logging.error(f"Error extracting text from {file_path}: {str(e)}")
+        logging.error(f"Failed to extract text from {file_path}: {e}")
         return None
 
 def extract_contact_info(text):
-    emails = EMAIL_REGEX.findall(text)
-    email = emails[0] if emails else ""
-
-    phones = PHONE_REGEX.findall(text)
-    phone = phones[0] if phones else ""
-
-    lines = text.strip().split('\n')
-    potential_name = lines[0].strip() if lines else ""
-
-    if len(potential_name.split()) > 4 or '@' in potential_name or any(char.isdigit() for char in potential_name):
+    email = EMAIL_REGEX.search(text)
+    phone = PHONE_REGEX.search(text)
+    
+    lines = text.splitlines()
+    potential_name = next((line for line in lines if line.strip()), "")
+    if (len(potential_name.split()) > 5 or '@' in potential_name or any(char.isdigit() for char in potential_name)):
         potential_name = ""
 
     return {
-        "name": potential_name,
-        "email": email,
-        "phone": phone
+        'name': potential_name.strip(),
+        'email': email.group(0) if email else "",
+        'phone': phone.group(0) if phone else ""
     }
 
 def extract_skills(text):
-    doc = nlp(text.lower())
-    found_skills = []
-    for skill in COMMON_SKILLS:
-        if re.search(r'\b' + re.escape(skill) + r'\b', text.lower()):
-            found_skills.append(skill.title())
-
+    text_lower = text.lower()
+    found_skills = [skill.title() for skill in COMMON_SKILLS if re.search(r'\b' + re.escape(skill) + r'\b', text_lower)]
+    
+    doc = nlp(text_lower)
     for ent in doc.ents:
-        if ent.label_ in ["ORG", "PRODUCT"] and ent.text.lower() not in [s.lower() for s in found_skills]:
-            if ent.text.lower() in [s.lower() for s in COMMON_SKILLS]:
+        if ent.label_ in {"ORG", "PRODUCT"}:
+            if ent.text.strip().lower() in COMMON_SKILLS and ent.text.title() not in found_skills:
                 found_skills.append(ent.text.title())
-
-    return sorted(list(set(found_skills)))
+    
+    return sorted(set(found_skills))
 
 def extract_education(text):
+    # Placeholder (future implementation)
     return []
 
 def extract_experience(text):
     experience = []
-    experience_keywords = [
-        'experience', 'employment', 'work history', 'professional experience',
-        'career', 'job history'
-    ]
-
-    lines = text.split('\n')
+    lines = text.splitlines()
     in_experience_section = False
     current_exp = {}
+    
+    experience_keywords = [
+        'experience', 'employment', 'work history', 'professional experience', 'career', 'job history'
+    ]
+    date_pattern = r'(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)[\s,]*\d{4}[-–—to\s]*(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?|\d{4}|present|current|now)?'
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
 
-        if any(keyword.lower() in line.lower() for keyword in experience_keywords):
+        if not in_experience_section and any(keyword in line.lower() for keyword in experience_keywords):
             in_experience_section = True
             continue
-
+        
         if in_experience_section:
-            date_pattern = r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\s*[-–—]\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)?\s*\d{0,4}|(\d{4}\s*[-–—]\s*(\d{4}|present|current|now))'
-
             if re.search(date_pattern, line, re.IGNORECASE):
-                if current_exp and 'title' in current_exp:
+                if current_exp:
                     experience.append(current_exp)
-
-                title_match = re.split(date_pattern, line, flags=re.IGNORECASE)[0].strip()
-                date_match = re.search(date_pattern, line, re.IGNORECASE).group(0)
-
-                title_parts = re.split(r'\s*[,|]\s*', title_match, 1)
-                if len(title_parts) >= 2:
-                    position, company = title_parts[0], title_parts[1]
-                else:
-                    position, company = title_match, ""
-
+                title_company_part = re.split(date_pattern, line, flags=re.IGNORECASE)[0].strip()
+                date_match = re.search(date_pattern, line, re.IGNORECASE)
+                
+                position, company = (title_company_part.split(',', 1) + [""])[:2]
                 current_exp = {
                     'title': position.strip(),
                     'company': company.strip(),
-                    'date': date_match.strip(),
+                    'date': date_match.group(0).strip() if date_match else '',
                     'description': []
                 }
-
-            elif current_exp and 'title' in current_exp:
-                if line.startswith('•') or line.startswith('-') or re.match(r'^\d+[\.)]\s', line):
+            elif current_exp:
+                if line.startswith(('-', '•')) or re.match(r'^\d+[\).]', line):
                     current_exp['description'].append(line)
-
-    if current_exp and 'title' in current_exp:
+    
+    if current_exp:
         experience.append(current_exp)
 
+    # Join descriptions
     for exp in experience:
         exp['description'] = '\n'.join(exp['description'])
 
@@ -159,24 +142,22 @@ def extract_experience(text):
 
 def extract_summary(text):
     summary_keywords = ['summary', 'professional summary', 'profile', 'objective', 'about me']
-
-    lines = text.split('\n')
-    summary = ""
+    lines = text.splitlines()
     in_summary = False
-
+    summary = ""
+    
     for i, line in enumerate(lines):
-        if any(keyword.lower() in line.lower() for keyword in summary_keywords):
+        if any(keyword in line.lower() for keyword in summary_keywords):
             in_summary = True
-            j = i + 1
             summary_lines = []
-            while j < len(lines) and len(summary_lines) < 5:
+            for j in range(i+1, min(i+6, len(lines))):
                 if lines[j].strip():
                     summary_lines.append(lines[j].strip())
-                j += 1
-            summary = " ".join(summary_lines)
+            summary = ' '.join(summary_lines)
             break
 
     if not summary:
+        # fallback: first paragraph without email/phone
         paragraphs = text.split('\n\n')
         if paragraphs:
             first_para = paragraphs[0].strip()
@@ -187,17 +168,12 @@ def extract_summary(text):
 
 def parse_resume(text):
     contact_info = extract_contact_info(text)
-    skills = extract_skills(text)
-    education = extract_education(text)
-    experience = extract_experience(text)
-    summary = extract_summary(text)
-
     return {
         'name': contact_info['name'],
         'email': contact_info['email'],
         'phone': contact_info['phone'],
-        'summary': summary,
-        'skills': skills,
-        'education': education,
-        'experience': experience
+        'summary': extract_summary(text),
+        'skills': extract_skills(text),
+        'education': extract_education(text),
+        'experience': extract_experience(text)
     }
