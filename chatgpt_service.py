@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the OpenAI client
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="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")
 
 def generate_chatgpt_response(query, context=None):
     """
