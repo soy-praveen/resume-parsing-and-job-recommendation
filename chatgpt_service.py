@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize the OpenAI client with environment variable
 # Never hardcode API keys in your code
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key="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")
 
 # Add backoff decorator to handle rate limiting and transient errors
 @backoff.on_exception(backoff.expo, 
